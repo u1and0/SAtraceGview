@@ -12,6 +12,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from SAtraceWatchdog.watchgraph import read_conf
@@ -69,6 +70,15 @@ app.layout = html.Div(
     ], )
 
 
+def title_renamer(filename: str) -> str:
+    """ふぃあるめいから %Y/%m/%d %T 形式の日付を返す"""
+    basename = os.path.splitext(filename)[0]
+    n = ''.join(basename.split('_', 1))
+    return f'{n[:4]}/{n[4:6]}/{n[6:8]} {n[8:10]}:{n[10:12]}:{n[12:14]}'
+    # dt = pd.Timestamp(no_underscore)
+    # return dt.strftime('%Y/%m/%d %T')
+
+
 def data_graph(
         df,
         filename,
@@ -78,13 +88,15 @@ def data_graph(
 ):
     """アップロードされたデータのグラフを描画"""
 
-    basename = os.path.splitext(filename)[0]
+    title = title_renamer(filename)
+    yaxis_name = '受信電力[dBm]'
+
     # ファイル名の1つ目の'_'で区切って、グラフタイトルとY軸名に分ける
-    if '_' in basename:
-        title, yaxis_name = basename.split('_', 1)
-    # ファイル名に'_'がなければグラフタイトル、Y軸名ともにファイル名
-    else:
-        title, yaxis_name = basename, basename
+    # if '_' in basename:
+    #     title, yaxis_name = basename.split('_', 1)
+    # # ファイル名に'_'がなければグラフタイトル、Y軸名ともにファイル名
+    # else:
+    #     title, yaxis_name = basename, basename
 
     def args(i):
         """graph_objs helper func"""
@@ -134,6 +146,9 @@ def parse_contents(contents, filename, date):  # , chart_type, xaxis_type,
     # config読み取り
     first_line = decoded[:decoded.find(b'\n')]
     conf_dict = read_conf(first_line.decode())
+    center_freq, _ = config_parse_freq(conf_dict, ':FREQ:CENT')
+    span_freq, unit = config_parse_freq(conf_dict, ':FREQ:SPAN')
+    points = int(conf_dict[':SWE:POIN'])
     # data読み取り
     try:
         if '.txt' == filename[-4:]:
@@ -149,6 +164,12 @@ def parse_contents(contents, filename, date):  # , chart_type, xaxis_type,
                     conf_dict[':TRAC3:TYPE']
                 ],
                 engine='python')
+            # 送信側bug -999を隠す
+            df.replace(-999.9, np.nan, inplace=True)
+            # グラフ装飾
+            df.index = np.linspace(center_freq - span_freq / 2,
+                                   center_freq + span_freq / 2, points)
+            df.index.name = unit
         """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
         # elif 'png' in filename:
         #     # Assume that the user uploaded an excel file
