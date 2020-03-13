@@ -1,0 +1,19 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	0.0.0	/a3c87ab5/
+EXTERNAL_STYLESHEETS	gview.py	/^EXTERNAL_STYLESHEETS = ['https:\/\/codepen.io\/chriddyp\/pen\/bWLwgP.css']$/;"	v
+app	gview.py	/^app = dash.Dash(__name__, external_stylesheets=EXTERNAL_STYLESHEETS)$/;"	v
+args	gview.py	/^    def args(i):$/;"	f	function:data_graph	file:
+data_graph	gview.py	/^def data_graph($/;"	f
+data_table	gview.py	/^def data_table(df):$/;"	f
+dcc	gview.py	/^import dash_core_components as dcc$/;"	I
+go	gview.py	/^import plotly.graph_objs as go$/;"	I
+html	gview.py	/^import dash_html_components as html$/;"	I
+parse_contents	gview.py	/^def parse_contents(contents, filename, date):  # , chart_type, xaxis_type,$/;"	f
+pd	gview.py	/^import pandas as pd$/;"	I
+update_output	gview.py	/^def update_output(list_of_contents, list_of_names, list_of_dates):$/;"	f
