@@ -131,20 +131,23 @@ def parse_contents(contents, filename, date):  # , chart_type, xaxis_type,
 
     # ファイルの内容読み取り
     decoded = base64.b64decode(content_string)
+    # config読み取り
+    first_line = decoded[:decoded.find(b'\n')]
+    conf_dict = read_conf(first_line.decode())
+    # data読み取り
     try:
         if '.txt' == filename[-4:]:
             # Assume that the user uploaded a CSV file
             df = pd.read_table(
-                io.StringIO(decoded.decode('utf-8')),  # filename,
+                io.StringIO(decoded.decode()),  # filename,
                 sep='\s+',
                 index_col=0,
                 skiprows=1,
                 skipfooter=1,
-                # names=[
-                #     conf_dict[':TRAC1:TYPE'],
-                #     conf_dict[':TRAC2:TYPE'],
-                #     conf_dict[':TRAC3:TYPE']
-                # ],
+                names=[
+                    conf_dict[':TRAC1:TYPE'], conf_dict[':TRAC2:TYPE'],
+                    conf_dict[':TRAC3:TYPE']
+                ],
                 engine='python')
         """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
         # elif 'png' in filename:
