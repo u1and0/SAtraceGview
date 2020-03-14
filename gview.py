@@ -16,8 +16,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from SAtraceWatchdog.watchgraph import read_conf
-
-from SAtraceWatchdog.watchgraph import config_parse_freq
+from SAtraceWatchdog.watchgraph import read_trace
 
 EXTERNAL_STYLESHEETS = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -51,13 +50,11 @@ def title_renamer(filename: str) -> str:
     """ファイル名から %Y/%m/%d %T 形式の日付を返す"""
     basename = os.path.splitext(filename)[0]
     n = ''.join(basename.split('_', 1))
+    #  return like %Y%m%d %H:%M%S
     return f'{n[:4]}/{n[4:6]}/{n[6:8]} {n[8:10]}:{n[10:12]}:{n[12:14]}'
 
 
-def data_graph(
-        df,
-        filename,
-):
+def data_graph(df, filename):
     """アップロードされたデータのグラフを描画"""
 
     title = title_renamer(filename)
@@ -105,31 +102,15 @@ def parse_contents(contents, filename, date):
     decoded = base64.b64decode(content_string)
     # config読み取り
     first_line = decoded[:decoded.find(b'\n')]
-    conf_dict = read_conf(first_line.decode())
-    center_freq, _ = config_parse_freq(conf_dict, ':FREQ:CENT')
-    span_freq, unit = config_parse_freq(conf_dict, ':FREQ:SPAN')
-    points = int(conf_dict[':SWE:POIN'])
+    config = read_conf(first_line.decode())
     # data読み取り
     try:
         if '.txt' == filename[-4:]:
             # Assume that the user uploaded a CSV file
-            df = pd.read_table(
-                io.StringIO(decoded.decode()),  # filename,
-                sep='\s+',
-                index_col=0,
-                skiprows=1,
-                skipfooter=1,
-                names=[
-                    conf_dict[':TRAC1:TYPE'], conf_dict[':TRAC2:TYPE'],
-                    conf_dict[':TRAC3:TYPE']
-                ],
-                engine='python')
+            df = read_trace(io.StringIO(decoded.decode()), config)
             # 送信側bug -999を隠す
             df.replace(-999.9, np.nan, inplace=True)
             # グラフ装飾
-            df.index = np.linspace(center_freq - span_freq / 2,
-                                   center_freq + span_freq / 2, points)
-            df.index.name = unit
         """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
         # elif 'png' in filename:
         #     # Assume that the user uploaded an excel file
@@ -142,8 +123,8 @@ def parse_contents(contents, filename, date):
 
     return html.Div([
         data_graph(df, filename),
-        html.H5(f'filename: {filename}'),
-        html.H5(f'last update: {datetime.datetime.fromtimestamp(date)}'),
+        html.H5(f'Filename: {filename}'),
+        html.H5(f'Last update: {datetime.datetime.fromtimestamp(date)}'),
         data_table(df),
         html.Hr(),  # horizontal line
 
