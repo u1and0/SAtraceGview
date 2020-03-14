@@ -15,8 +15,7 @@ import dash_table
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
-from SAtraceWatchdog.watchgraph import read_conf
-from SAtraceWatchdog.watchgraph import read_trace
+from SAtraceWatchdog.watchgraph import read_conf, read_trace, title_renamer
 
 EXTERNAL_STYLESHEETS = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -46,17 +45,8 @@ app.layout = html.Div(
     ], )
 
 
-def title_renamer(filename: str) -> str:
-    """ファイル名から %Y/%m/%d %T 形式の日付を返す"""
-    basename = os.path.splitext(filename)[0]
-    n = ''.join(basename.split('_', 1))
-    #  return like %Y%m%d %H:%M%S
-    return f'{n[:4]}/{n[4:6]}/{n[6:8]} {n[8:10]}:{n[10:12]}:{n[12:14]}'
-
-
 def data_graph(df, filename):
     """アップロードされたデータのグラフを描画"""
-
     title = title_renamer(filename)
     yaxis_name = '受信電力[dBm]'
 
