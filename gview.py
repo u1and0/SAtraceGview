@@ -3,8 +3,6 @@
 import base64
 import datetime
 import io
-import os
-from collections import defaultdict
 
 import dash
 from dash.dependencies import Input, Output, State
@@ -13,7 +11,6 @@ import dash_html_components as html
 import dash_table
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objs as go
 from SAtraceWatchdog.watchgraph import read_conf, read_trace, title_renamer
 
@@ -86,7 +83,7 @@ def data_table(df):
 
 def parse_contents(contents, filename, date):
     """drop & dropされたファイルの内容を読み込む"""
-    content_type, content_string = contents.split(',')
+    _content_type, content_string = contents.split(',')
 
     # ファイルの内容読み取り
     decoded = base64.b64decode(content_string)
@@ -101,7 +98,7 @@ def parse_contents(contents, filename, date):
             # 送信側bug -999を隠す
             df.replace(-999.9, np.nan, inplace=True)
             # グラフ装飾
-        """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
+        # """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
         # elif 'png' in filename:
         #     # Assume that the user uploaded an excel file
         #     df = pd.read_excel(io.BytesIO(decoded),
@@ -136,6 +133,7 @@ def parse_contents(contents, filename, date):
 ], [State('upload-data', 'filename'),
     State('upload-data', 'last_modified')])
 def update_output(list_of_contents, list_of_names, list_of_dates):
+    """ファイルをドロップしたときにコンテンツのアップデートを実行する"""
     if list_of_contents is not None:
         children = [
             parse_contents(c, n, d)
