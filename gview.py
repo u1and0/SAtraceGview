@@ -92,7 +92,7 @@ def parse_contents(contents, filename, date):
     config = read_conf(first_line.decode())
     # data読み取り
     try:
-        if '.txt' == filename[-4:]:
+        if filename[-4:] == '.txt':
             # Assume that the user uploaded a CSV file
             df = read_trace(io.StringIO(decoded.decode()), config)
             # 送信側bug -999を隠す
@@ -104,7 +104,9 @@ def parse_contents(contents, filename, date):
         #     df = pd.read_excel(io.BytesIO(decoded),
         #                        index_col=0,
         #                        parse_dates=True)
-    except Exception as e:
+        else:
+            raise ValueError
+    except ValueError as e:
         print(e)
         return html.Div([f'There was an error processing this file.\n{e}'])
 
