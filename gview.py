@@ -11,6 +11,7 @@ import dash_html_components as html
 import dash_table
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
 from SAtraceWatchdog.watchgraph import read_conf, read_trace, title_renamer
 
@@ -42,9 +43,8 @@ app.layout = html.Div(
     ], )
 
 
-def data_graph(df, filename):
+def data_graph(df, title):
     """アップロードされたデータのグラフを描画"""
-    title = title_renamer(filename)
     yaxis_name = '受信電力[dBm]'
 
     def args(i):
@@ -81,49 +81,44 @@ def data_table(df):
     return dash_table.DataTable(data=data, columns=columns)
 
 
-def parse_contents(contents, filename, date):
-    """drop & dropされたファイルの内容を読み込む"""
-    _content_type, content_string = contents.split(',')
-
-    # ファイルの内容読み取り
+def decode_contents(c):
+    """ ファイルの内容読み取り"""
+    _content_type, content_string = c.split(',')
     decoded = base64.b64decode(content_string)
     # config読み取り
-    first_line = decoded[:decoded.find(b'\n')]
-    config = read_conf(first_line.decode())
+    first_line = decoded[:decoded.find(b'\n')].decode()
+    config = read_conf(first_line)
+    data = io.StringIO(decoded.decode())
+    return data, config
+
+
+def parse_contents_multi(contents, filename, date):
+    """複数ファイルdrop & dropされたファイルの内容を読み込む"""
+    df = pd.DataFrame({
+        f[:-4]: read_trace(*decode_contents(c)).iloc[:, 2]
+        for f, c in zip(filename, contents)
+    })
+    df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
+    return html.Div([
+        data_graph(df, title=str(len(filename)) + ' files'),
+        html.H5('Filename: {}'.format(' '.join(filename))),
+        # html.H5(f'Last update: {datetime.datetime.fromtimestamp(date)}'),
+        data_table(df),
+    ])
+
+
+def parse_contents(contents, filename, date):
+    """drop & dropされたファイルの内容を読み込む"""
     # data読み取り
-    try:
-        if filename[-4:] == '.txt':
-            # Assume that the user uploaded a CSV file
-            df = read_trace(io.StringIO(decoded.decode()), config)
-            # 送信側bug -999を隠す
-            df.replace(-999.9, np.nan, inplace=True)
-            # グラフ装飾
-        # """あとでpngをD&Dしたらtxtに名前を変えてtxt探してプロットする機能をつける"""
-        # elif 'png' in filename:
-        #     # Assume that the user uploaded an excel file
-        #     df = pd.read_excel(io.BytesIO(decoded),
-        #                        index_col=0,
-        #                        parse_dates=True)
-        else:
-            raise ValueError
-    except ValueError as e:
-        print(e)
-        return html.Div([f'There was an error processing this file.\n{e}'])
+    df = read_trace(*decode_contents(contents))
+    # 送信側bug -999を隠す
+    df.replace(-999.9, np.nan, inplace=True)
 
     return html.Div([
-        data_graph(df, filename),
+        data_graph(df, title_renamer(filename)),
         html.H5(f'Filename: {filename}'),
         html.H5(f'Last update: {datetime.datetime.fromtimestamp(date)}'),
         data_table(df),
-        html.Hr(),  # horizontal line
-
-        # For debugging, display the raw contents provided by the web browser
-        html.Div('Raw Content'),
-        html.Pre(contents[0:200] + '...',
-                 style={
-                     'whiteSpace': 'pre-wrap',
-                     'wordBreak': 'break-all'
-                 })
     ])
 
 
@@ -137,11 +132,24 @@ def parse_contents(contents, filename, date):
 def update_output(list_of_contents, list_of_names, list_of_dates):
     """ファイルをドロップしたときにコンテンツのアップデートを実行する"""
     if list_of_contents is not None:
-        children = [
+        try:  # txtファイル以外はエラー
+            if not all(n[-4:] == '.txt' for n in list_of_names):
+                raise ValueError
+        except ValueError as e:
+            print(e)
+            return html.Div([f'There was an error processing this file.\n{e}'])
+
+        if len(list_of_contents) > 1:
+            return parse_contents_multi(
+                list_of_contents,
+                list_of_names,
+                list_of_dates,
+            )
+        # list_of_contents is not None:
+        return [
             parse_contents(c, n, d)
             for c, n, d in zip(list_of_contents, list_of_names, list_of_dates)
         ]
-        return children
 
 
 if __name__ == '__main__':
