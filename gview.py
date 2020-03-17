@@ -95,7 +95,7 @@ def decode_contents(c):
 def parse_contents_multi(contents, filename, date):
     """複数ファイルdrop & dropされたファイルの内容を読み込む"""
     df = pd.DataFrame({
-        f[:-4]: read_trace(*decode_contents(c)).iloc[:, 2]
+        title_renamer(f): read_trace(*decode_contents(c)).iloc[:, 2]
         for f, c in zip(filename, contents)
     })
     df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
