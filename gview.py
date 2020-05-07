@@ -13,7 +13,7 @@ import dash_table
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
-from SAtraceWatchdog.watchgraph import read_conf, read_trace, title_renamer
+from SAtraceWatchdog.tracer import read_conf, read_trace, title_renamer
 
 EXTERNAL_STYLESHEETS = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
