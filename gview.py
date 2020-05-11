@@ -3,17 +3,15 @@
 import base64
 import datetime
 import io
-
+import numpy as np
+import pandas as pd
+import plotly.graph_objs as go
 import dash
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-
-import numpy as np
-import pandas as pd
-import plotly.graph_objs as go
-from SAtraceWatchdog.watchgraph import read_conf, read_trace, title_renamer
+from SAtraceWatchdog.tracer import read_conf, read_trace, title_renamer
 
 EXTERNAL_STYLESHEETS = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
