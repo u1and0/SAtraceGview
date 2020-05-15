@@ -1,0 +1,3 @@
+[submodule "SAtraceWatchdog"]
+	path = SAtraceWatchdog
+	url = https://github.com/u1and0/SAtraceWatchdog

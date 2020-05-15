@@ -1,5 +1,7 @@
 numpy
 pandas
-flask
+scipy
+seaborn
+matplotlib
 dash
 plotly

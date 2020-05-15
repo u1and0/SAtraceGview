@@ -41,9 +41,8 @@ app.layout = html.Div(
     ], )
 
 
-def data_graph(df, title):
+def data_graph(df, title, yaxis_name=None):
     """アップロードされたデータのグラフを描画"""
-    yaxis_name = '受信電力[dBm]'
 
     def args(i):
         """graph_objs helper func"""
