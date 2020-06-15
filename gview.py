@@ -88,7 +88,7 @@ def decode_contents(c):
     return data, config
 
 
-def parse_contents_multi(contents, filename, date):
+def parse_contents_multi(contents, filename):
     """複数ファイルdrop & dropされたファイルの内容を読み込む"""
     df = pd.DataFrame({
         title_renamer(f): read_trace(*decode_contents(c),
@@ -99,12 +99,11 @@ def parse_contents_multi(contents, filename, date):
     return html.Div([
         data_graph(df, title=str(len(filename)) + ' files'),
         html.H5('Filename: {}'.format(' '.join(filename))),
-        # html.H5(f'Last update: {datetime.datetime.fromtimestamp(date)}'),
         data_table(df),
     ])
 
 
-def parse_contents(contents, filename, date):
+def parse_contents(contents, filename):
     """drop & dropされたファイルの内容を読み込む"""
     # data読み取り
     df = read_trace(*decode_contents(contents))
@@ -114,7 +113,6 @@ def parse_contents(contents, filename, date):
     return html.Div([
         data_graph(df, title_renamer(filename)),
         html.H5(f'Filename: {filename}'),
-        html.H5(f'Last update: {datetime.datetime.fromtimestamp(date)}'),
         data_table(df),
     ])
 
@@ -124,9 +122,10 @@ def parse_contents(contents, filename, date):
     'children',
 ), [
     Input('upload-data', 'contents'),
-], [State('upload-data', 'filename'),
-    State('upload-data', 'last_modified')])
-def update_output(list_of_contents, list_of_names, list_of_dates):
+], [
+    State('upload-data', 'filename'),
+])
+def update_output(list_of_contents, list_of_names):
     """ファイルをドロップしたときにコンテンツのアップデートを実行する"""
     if list_of_contents is not None:
         try:  # txtファイル以外はエラー
@@ -140,12 +139,11 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
             return parse_contents_multi(
                 list_of_contents,
                 list_of_names,
-                list_of_dates,
             )
         # list_of_contents is not None:
         return [
-            parse_contents(c, n, d)
-            for c, n, d in zip(list_of_contents, list_of_names, list_of_dates)
+            parse_contents(c, n)
+            for c, n in zip(list_of_contents, list_of_names)
         ]
 
 
