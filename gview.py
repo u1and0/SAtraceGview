@@ -43,7 +43,6 @@ app.layout = html.Div(
 
 def data_graph(df, title, yaxis_name=None):
     """アップロードされたデータのグラフを描画"""
-
     def args(i):
         """graph_objs helper func"""
         return {'x': df.index, 'y': df[i], 'name': i}
@@ -92,7 +91,8 @@ def decode_contents(c):
 def parse_contents_multi(contents, filename, date):
     """複数ファイルdrop & dropされたファイルの内容を読み込む"""
     df = pd.DataFrame({
-        title_renamer(f): read_trace(*decode_contents(c)).iloc[:, 2]
+        title_renamer(f): read_trace(*decode_contents(c),
+                                     usecols='AVER').squeeze()
         for f, c in zip(filename, contents)
     })
     df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
@@ -131,7 +131,7 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
     if list_of_contents is not None:
         try:  # txtファイル以外はエラー
             if not all(n[-4:] == '.txt' for n in list_of_names):
-                raise ValueError
+                raise ValueError('txt形式のファイルがアップロードされませんでした。')
         except ValueError as e:
             print(e)
             return html.Div([f'There was an error processing this file.\n{e}'])
