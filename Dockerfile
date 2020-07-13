@@ -30,5 +30,5 @@ EXPOSE 8880
 LABEL maintainer="u1and0 <e01.ando60@gmail.com>" \
       description="Just Upload & Plot. Easy visualize tool via http." \
       description.ja="UplodしてPlotするだけ。簡単なhttp経由の可視化ツール。" \
-      version="satracegview:v0.0.0" \
+      version="satracegview:v0.0.2" \
       usage="docker run -d -p 8880:8880 u1and0/satracegview"
