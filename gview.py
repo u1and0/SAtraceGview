@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """interactive plot for SAtrace"""
 import base64
-import datetime
 import io
 import numpy as np
 import pandas as pd
@@ -111,6 +110,8 @@ def parse_contents(contents, filename):
     df.replace(-999.9, np.nan, inplace=True)
 
     return html.Div([
+        html.Button(children='preview', id='button1'),
+        html.Button(children='next', id='button2'),
         data_graph(df, title_renamer(filename)),
         html.H5(f'Filename: {filename}'),
         data_table(df),
