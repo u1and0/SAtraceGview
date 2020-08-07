@@ -96,6 +96,8 @@ def parse_contents_multi(contents, filename):
     })
     df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
     return html.Div([
+        html.Button(children='preview', id='button1'),
+        html.Button(children='next', id='button2'),
         data_graph(df, title=str(len(filename)) + ' files'),
         html.H5('Filename: {}'.format(' '.join(filename))),
         data_table(df),
@@ -110,8 +112,6 @@ def parse_contents(contents, filename):
     df.replace(-999.9, np.nan, inplace=True)
 
     return html.Div([
-        html.Button(children='preview', id='button1'),
-        html.Button(children='next', id='button2'),
         data_graph(df, title_renamer(filename)),
         html.H5(f'Filename: {filename}'),
         data_table(df),
@@ -134,7 +134,7 @@ def update_output(list_of_contents, list_of_names):
                 raise ValueError('txt形式のファイルがアップロードされませんでした。')
         except ValueError as e:
             print(e)
-            return html.Div([f'There was an error processing this file.\n{e}'])
+            return html.Div([f'{e}'])
 
         if len(list_of_contents) > 1:
             return parse_contents_multi(
