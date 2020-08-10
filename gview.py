@@ -3,7 +3,6 @@
 import base64
 import io
 import numpy as np
-import pandas as pd
 import plotly.graph_objs as go
 import dash
 from dash.dependencies import Input, Output, State
@@ -35,6 +34,8 @@ app.layout = html.Div(
             },
             # Allow multiple files to be uploaded
             multiple=True),
+        html.Div(id='preview-button'),
+        html.Div(id='next-button'),
         html.Div(id='the_graph'),
         html.Div(id='output-data-upload'),
     ], )
@@ -89,19 +90,25 @@ def decode_contents(c):
 
 def parse_contents_multi(contents, filename):
     """複数ファイルdrop & dropされたファイルの内容を読み込む"""
-    df = pd.DataFrame({
-        title_renamer(f): read_trace(*decode_contents(c),
-                                     usecols='AVER').squeeze()
-        for f, c in zip(filename, contents)
-    })
-    df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
-    return html.Div([
-        html.Button(children='preview', id='button1'),
-        html.Button(children='next', id='button2'),
-        data_graph(df, title=str(len(filename)) + ' files'),
-        html.H5('Filename: {}'.format(' '.join(filename))),
-        data_table(df),
-    ])
+    # df = pd.DataFrame({
+    #     title_renamer(f): read_trace(*decode_contents(c),
+    #                                  usecols='AVER').squeeze()
+    #     for f, c in zip(filename, contents)
+    # })
+    # df.replace(-999.9, np.nan, inplace=True)  # 送信側bug -999を隠す
+    singlegraph = [
+        html.Button(children='preview', id='prev-button', n_clicks=0),
+        html.Button(children='next', id='next-button', n_clicks=0),
+        parse_contents(contents[0], filename[0]),
+    ]
+    return html.Div(singlegraph)
+    # return html.Div([
+    #     html.Button(children='preview', id='prev-button'),
+    #     html.Button(children='next', id='next-button'),
+    #     data_graph(df, title='{len(filename)} files'),
+    #     html.H5('Filename: {}'.format(' '.join(filename))),
+    #     data_table(df),
+    # ])
 
 
 def parse_contents(contents, filename):
@@ -116,6 +123,28 @@ def parse_contents(contents, filename):
         html.H5(f'Filename: {filename}'),
         data_table(df),
     ])
+
+
+@app.callback(
+    Output('the_graph', 'children'),
+    [Input('next-button', 'n_clicks'),
+     Input('preview-button', 'n_clicks')],
+    [State('upload-data', 'contents'),
+     State('upload-data', 'filename')])
+def update_graph(prev_btn: int, next_btn: int, contents, filename):
+    """preview / next ボタンが押されたときに、
+    グラフを次のデータにアップデートする"""
+    index = 0
+    if not (prev_btn is None or next_btn is None):
+        index = next_btn - prev_btn
+    if not (contents is None and filename is None):
+        return html.Div([
+            html.Button(children='preview',
+                        id='preview-button',
+                        n_clicks=prev_btn),
+            html.Button(children='next', id='next-button', n_clicks=next_btn),
+            parse_contents(contents[index], filename[index]),
+        ])
 
 
 @app.callback(Output(
@@ -135,17 +164,10 @@ def update_output(list_of_contents, list_of_names):
         except ValueError as e:
             print(e)
             return html.Div([f'{e}'])
-
+        # if ... None: の下につかないとlist_of_contentsがNoneなので、エラー
         if len(list_of_contents) > 1:
-            return parse_contents_multi(
-                list_of_contents,
-                list_of_names,
-            )
-        # list_of_contents is not None:
-        return [
-            parse_contents(c, n)
-            for c, n in zip(list_of_contents, list_of_names)
-        ]
+            return parse_contents_multi(list_of_contents, list_of_names)
+        return parse_contents(list_of_contents[0], list_of_names[0])
 
 
 if __name__ == '__main__':
